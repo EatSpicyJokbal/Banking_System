@@ -78,6 +78,8 @@ const createUser = async ({
     }
 }
 
+
+//Age validation
 function calculateAge(dateOfBirth) {
     const dob = new Date(dateOfBirth);
 
