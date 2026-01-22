@@ -1,36 +1,59 @@
-// User Model Definition
-// This file defines the structure and schema for the User entity
+// User.model.js
+// Purpose: Defines the USERS table structure for the banking system
 
-export const UserModel = {
-    tableName: 'sample',
-    columns: {
-        id: 'serial PRIMARY KEY',
-        username: 'VARCHAR(50) UNIQUE NOT NULL',
-        email: 'VARCHAR(100) UNIQUE NOT NULL',
-        password: 'VARCHAR(255) NOT NULL',
-        first_name: 'VARCHAR(50) NOT NULL',
-        last_name: 'VARCHAR(50) NOT NULL',
-        middle_name: 'VARCHAR(50) NOT NULL',
-        date_of_birth: 'DATE NOT NULL',
-        phone_number: 'VARCHAR(20) UNIQUE NOT NULL',
-        created_at: 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP',
-        updated_at: 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP'
-    }
+const UserModel = {
+  tableName: 'users',
+
+  columns: {
+    id: 'UUID PRIMARY KEY DEFAULT gen_random_uuid()',
+
+    // Identity
+    email: 'VARCHAR(255) UNIQUE NOT NULL',
+    username: 'VARCHAR(50) UNIQUE NOT NULL',
+
+    // Security
+    password_hash: 'TEXT NOT NULL',
+
+    // Personal Information
+    first_name: 'VARCHAR(100) NOT NULL',
+    last_name: 'VARCHAR(100) NOT NULL',
+    middle_name: 'VARCHAR(100)',
+    date_of_birth: 'DATE NOT NULL',
+
+    // Contact
+    phone_number: 'VARCHAR(20) UNIQUE',
+
+    // Status & Auditing
+    is_active: 'BOOLEAN DEFAULT true',
+    created_at: 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP',
+    updated_at: 'TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP'
+  }
 };
 
-// SQL to create users table
-export const createUsersTableQuery = `
-    CREATE TABLE IF NOT EXISTS sample (
-        id SERIAL PRIMARY KEY,
-        username VARCHAR(50) UNIQUE NOT NULL,
-        email VARCHAR(100) UNIQUE NOT NULL,
-        password VARCHAR(255) NOT NULL,
-        first_name VARCHAR(50),
-        last_name VARCHAR(50),
-        middle_name VARCHAR(50),
-        date_of_birth DATE,
-        phone_number VARCHAR(20) UNIQUE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
+const createUsersTableQuery = `
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  email VARCHAR(255) UNIQUE NOT NULL,
+  username VARCHAR(50) UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+
+  first_name VARCHAR(100) NOT NULL,
+  last_name VARCHAR(100) NOT NULL,
+  middle_name VARCHAR(100),
+  date_of_birth DATE NOT NULL,
+
+  phone_number VARCHAR(20) UNIQUE,
+
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 `;
+
+export {
+  UserModel,
+  createUsersTableQuery
+};

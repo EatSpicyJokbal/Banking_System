@@ -61,10 +61,13 @@ const createUser = async ({
             throw new Error('Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character.')
         }
 
+        //Check if user is above the age limit
+        calculateAge(date_of_birth);
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const insertUser = await client.query(
-            'INSERT INTO users (username, email, phone_number, first_name, middle_name, last_name, date_of_birth, password) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+            'INSERT INTO users (username, email, phone_number, first_name, middle_name, last_name, date_of_birth, password_hash) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
             [username, email, phone_number, first_name, middle_name, last_name, date_of_birth, hashedPassword]
         )
 
@@ -73,6 +76,31 @@ const createUser = async ({
         console.error('Database Error', error)
         throw error;
     }
+}
+
+function calculateAge(dateOfBirth) {
+    const dob = new Date(dateOfBirth);
+
+    if(isNaN(dob.getTime())) {
+        throw new Error("Invalid date of birth");
+    }
+
+    const today = new Date();
+
+    if(dob > today) {
+        throw new Error("Date of birth cannot be in the future");
+    }
+
+    let age = today.getFullYear() - dob.getFullYear();
+
+    if(today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) {
+        age--;
+    }
+
+    if(age < 18) {
+        throw new Error("To register you must be at least 18 years old");
+    }
+
 }
 
 export default createUser;
