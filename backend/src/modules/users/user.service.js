@@ -130,8 +130,11 @@ const findUser = async ({
         );
 
         if (!isPasswordCorrect) {
+            recordFailedLogin(user.id);
             throw new Error("Invalid username or password");
         }
+
+        updateLastLogin(user.id);
 
         return {
             id: user.id,
@@ -141,6 +144,27 @@ const findUser = async ({
         console.error("Database Error: ", error);
         throw error;
     }
+}
+
+async function recordFailedLogin(userId) {
+    const client = await pool.connect();
+
+    await client.query(
+        'UPDATE users SET failed_login_attempts = failed_login_attempts + 1, updated_at = CURRENT_TIMESTAMP where id = $1',
+        [userId]
+    );
+}
+
+async function updateLastLogin(userId) {
+    const client = await pool.connect();
+
+    await client.query(
+        `UPDATE users SET failed_login_attempts = 0,
+            last_login_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1`,
+        [userId]
+    );
 }
 
 export {createUser, findUser};
