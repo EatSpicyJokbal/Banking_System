@@ -64,7 +64,8 @@ const createUser = async ({
         //Check if user is above the age limit
         calculateAge(date_of_birth);
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const salt = await brcypt.genSalt();
+        const hashedPassword = await bcrypt.hash(password, salt);
 
         const insertUser = await client.query(
             'INSERT INTO users (username, email, phone_number, first_name, middle_name, last_name, date_of_birth, password_hash) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
@@ -105,5 +106,42 @@ function calculateAge(dateOfBirth) {
 
 }
 
-export default createUser;
+const findUser = async ({
+    username,
+    password
+}) => {
+    const client = await pool.connect();
+
+    try {
+        const result = await client.query(
+            'SELECT id, username, password_hash FROM users WHERE username = $1', [username]
+        );
+        // Check if username does exist
+        if(result.rows.length === 0) {
+            throw new Error("Invalid username or password");
+        }
+
+        const user = result.rows[0];
+
+        // Compare Password
+        const isPasswordCorrect = await bcrypt.compare(
+            password,
+            user.password_hash
+        );
+
+        if (!isPasswordCorrect) {
+            throw new Error("Invalid username or password");
+        }
+
+        return {
+            id: user.id,
+            username: user.username
+        };
+    } catch (error) {
+        console.error("Database Error: ", error);
+        throw error;
+    }
+}
+
+export {createUser, findUser};
 
